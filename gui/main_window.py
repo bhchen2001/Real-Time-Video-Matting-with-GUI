@@ -64,6 +64,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         """
         self.model_select.currentIndexChanged.connect(lambda index: self.ProcessCam.change_model(self.model_select.currentText()))
 
+        """
+        Input video functions
+        """
+        self.input_select.activated.connect(self.input_type_change)
+
     def getRaw(self, data):  # data 為接收到的影像
         """ 取得影像 """
         self.showData(data)  # 將影像傳入至 showData()
@@ -265,3 +270,18 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.ProcessCam.video_writter.release()
             time.sleep(1)
             self.ProcessCam.video_writter = None
+
+    def input_type_change(self):
+        """
+        input type change
+        """
+        self.ProcessCam.input_type = self.input_select.currentIndex()
+        if self.ProcessCam.input_type == 0:
+            self.ProcessCam.video_input = None
+        elif self.ProcessCam.input_type == 1:
+            video_path = QtWidgets.QFileDialog.getOpenFileName(self, 'Open File', '../content/video', 'Video Files (*.mp4 *.avi *.mov)')[0]
+            if not video_path:
+                return
+            self.ProcessCam.video_input = cv2.VideoCapture(video_path)
+            if not self.ProcessCam.video_input.isOpened():
+                raise IOError("Cannot open video file")
