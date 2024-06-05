@@ -25,8 +25,11 @@ class Camera(QtCore.QThread):
         self.device = device
 
         self.cam = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        self.cam2 = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+        
         self.frame_width = int(self.cam.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.frame_height = int(self.cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
         if self.cam is None or not self.cam.isOpened():
             self.connect = False
             self.running = False
@@ -71,7 +74,7 @@ class Camera(QtCore.QThread):
                     raise IOError("Cannot open background image")
                 self.background_img = cv2.cvtColor(self.background_img, cv2.COLOR_BGR2RGB)
                 self.background_img = cv2.resize(self.background_img, (self.frame_width,self.frame_height))
-                # background_tensor = torch.tensor(self.background_img, dtype=torch.float32).permute(2, 0, 1).unsqueeze(0).div(255).to(device)
+                background_tensor = torch.tensor(self.background_img, dtype=torch.float32).permute(2, 0, 1).unsqueeze(0).div(255).to(device)
         else:
             raise ValueError("Invalid background source")
 
