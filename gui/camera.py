@@ -36,6 +36,12 @@ class Camera(QtCore.QThread):
         self.background_img = None
         self.background_cap = None
 
+        """
+        record-related variables
+        """
+        self.record_flag = False
+        self.video_writter = None
+
         if os.path.isfile(background_source):
             if background_source.lower().endswith(('.mp4', '.avi', '.mov')):
                 self.background_cap = cv2.VideoCapture(background_source)
@@ -95,6 +101,16 @@ class Camera(QtCore.QThread):
                         bg_frame = cv2.cvtColor(bg_frame, cv2.COLOR_BGR2RGB)
                         bg_frame = cv2.resize(bg_frame, (1920, 1080))
                         background_tensor = torch.tensor(bg_frame, dtype=torch.float32).permute(2, 0, 1).unsqueeze(0).div(255).to(device)
+
+                    if self.record_flag:
+                        """
+                        record frontground video
+                        """
+                        green_background = torch.tensor([0, 1, 0], dtype=torch.float32).view(1, 3, 1, 1).to(device)
+                        com_green = fgr * pha + green_background * (1 - pha)
+                        com_green = com_green.squeeze().permute(1, 2, 0).cpu().numpy()
+                        com_green = cv2.cvtColor(com_green, cv2.COLOR_RGB2BGR)
+                        self.video_writter.write((com_green * 255).astype('uint8'))
 
                     com = fgr * pha + background_tensor * (1 - pha)
                     com = com.squeeze().permute(1, 2, 0).cpu().numpy()

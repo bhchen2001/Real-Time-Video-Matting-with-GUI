@@ -30,7 +30,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.last_move_y2 = 0
 
         # 設定相機功能
-        self.ProcessCam = Camera('mobilenetv3', "../pretained_model/rvm_mobilenetv3.pth", self.device)  # 建立相機物件
+        self.ProcessCam = Camera('mobilenetv3', "../pretrained_model/rvm_mobilenetv3.pth", self.device)  # 建立相機物件
         if self.ProcessCam.connect:
             # 連接影像訊號 (ori_data) 至 getRaw()
             self.ProcessCam.ori_data.connect(self.getRaw)  # 槽功能：取得並顯示影像
@@ -49,6 +49,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.cam_stop.clicked.connect(self.stopCam)  # 槽功能：暫停讀取影像
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.browser_button.clicked.connect(self.replace_background)
+
+        """
+        Record-related functions
+        """
+        self.ProcessCam.record_flag = False
+        self.record_start.clicked.connect(self.set_record_flag_start)
+        self.record_stop.clicked.connect(self.set_record_flag_stop)
 
     def getRaw(self, data):  # data 為接收到的影像
         """ 取得影像 """
@@ -204,3 +211,21 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.ProcessCam.background_cap = cv2.VideoCapture(background_path)
             if not self.ProcessCam.background_cap.isOpened():
                 raise IOError("Cannot open background video")
+            
+    def set_record_flag_start(self):
+        """
+        set record flag when clicking the button
+        """
+        if not self.ProcessCam.record_flag:
+            self.ProcessCam.record_flag = True
+            self.ProcessCam.video_writter = cv2.VideoWriter('../output/output.avi', cv2.VideoWriter_fourcc(*'mp4v'), 20, (1920, 1080))
+
+    def set_record_flag_stop(self):
+        """
+        set record flag when clicking the button
+        """
+        if self.ProcessCam.record_flag:
+            self.ProcessCam.record_flag = False
+            self.ProcessCam.video_writter.release()
+            time.sleep(1)
+            self.ProcessCam.video_writter = None
