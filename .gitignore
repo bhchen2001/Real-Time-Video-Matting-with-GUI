@@ -1,0 +1,15 @@
+# pycache
+__pycache__/
+
+# video files
+content/video/*.mp4
+content/video/*.mov
+content/video/*.avi
+
+# iamge file
+content/image/*.jpg
+content/image/*.png
+content/image/*.jpeg
+
+# pretrained model
+pretrained_model/*.pth
