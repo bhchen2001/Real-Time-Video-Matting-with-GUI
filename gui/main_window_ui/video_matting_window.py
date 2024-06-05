@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'new_mycamera2.ui'
+# Form implementation generated from reading ui file 'video_matting_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.10
 #
@@ -130,6 +130,8 @@ class Ui_MainWindow(object):
         self.viewRoi2.addItem("")
         self.viewRoi2.addItem("")
         self.viewRoi2.addItem("")
+        self.viewRoi2.addItem("")
+        self.viewRoi2.addItem("")
         self.buttom.addWidget(self.viewRoi2)
         self.mainBox.addLayout(self.buttom)
         self.buttom2 = QtWidgets.QHBoxLayout()
@@ -237,6 +239,8 @@ class Ui_MainWindow(object):
         self.viewRoi2.setItemText(0, _translate("MainWindow", "Style1"))
         self.viewRoi2.setItemText(1, _translate("MainWindow", "Style2"))
         self.viewRoi2.setItemText(2, _translate("MainWindow", "Style3"))
+        self.viewRoi2.setItemText(3, _translate("MainWindow", "Style4"))
+        self.viewRoi2.setItemText(4, _translate("MainWindow", "Style5"))
         self.bg_select.setItemText(0, _translate("MainWindow", "File background"))
         self.bg_select.setItemText(1, _translate("MainWindow", "Camera2 background"))
         self.browser_button.setText(_translate("MainWindow", "Browser file"))

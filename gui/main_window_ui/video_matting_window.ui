@@ -312,6 +312,16 @@
             <string>Style3</string>
            </property>
           </item>
+          <item>
+           <property name="text">
+            <string>Style4</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Style5</string>
+           </property>
+          </item>
          </widget>
         </item>
        </layout>
