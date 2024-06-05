@@ -50,8 +50,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.cam_start.clicked.connect(self.openCam)  # 槽功能：開啟攝影機
         self.cam_stop.clicked.connect(self.stopCam)  # 槽功能：暫停讀取影像
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        if self.bg_select.currentIdx() == 0:
-            self.browser_button.clicked.connect(self.replace_background)
+        self.browser_button.clicked.connect(self.replace_background)
 
         """
         Record-related functions
@@ -59,6 +58,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.ProcessCam.record_flag = False
         self.record_start.clicked.connect(self.set_record_flag_start)
         self.record_stop.clicked.connect(self.set_record_flag_stop)
+
+        """
+        Model-select functions
+        """
+        self.model_select.currentIndexChanged.connect(lambda index: self.ProcessCam.change_model(self.model_select.currentText()))
 
     def getRaw(self, data):  # data 為接收到的影像
         """ 取得影像 """

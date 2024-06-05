@@ -43,6 +43,14 @@ class Camera(QtCore.QThread):
         """
         self.record_flag = False
         self.video_writter = None
+        
+        """
+        model info
+        """
+        self.model_dict = {
+            "mobilenetv3": "rvm_mobilenetv3.pth",
+            "resnet50": "rvm_resnet50.pth",
+        }
 
         if os.path.isfile(background_source):
             if background_source.lower().endswith(('.mp4', '.avi', '.mov')):
@@ -136,3 +144,13 @@ class Camera(QtCore.QThread):
         if self.connect:
             self.running = False
             time.sleep(1)
+
+    def change_model(self, model_name):
+        """
+        change model depend on model_index
+        """
+        checkpoint = "../pretrained_model/" + self.model_dict[model_name]
+        self.model = MattingNetwork(model_name).eval().to(self.device)
+        self.model.load_state_dict(torch.load(checkpoint, map_location=self.device))
+        self.model = torch.jit.script(self.model)
+        self.model = torch.jit.freeze(self.model)
