@@ -26,6 +26,30 @@
       <item>
        <layout class="QHBoxLayout" name="top">
         <item>
+         <widget class="QComboBox" name="input_select">
+          <property name="font">
+           <font>
+            <family>Arial</family>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <item>
+           <property name="text">
+            <string>Camera Input</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Video Input</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item>
          <widget class="QPushButton" name="cam_start">
           <property name="minimumSize">
            <size>
@@ -63,6 +87,27 @@
           <property name="text">
            <string>Stop</string>
           </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="model_select">
+          <property name="font">
+           <font>
+            <family>Arial</family>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <item>
+           <property name="text">
+            <string>mobilenetv3</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>resnet50</string>
+           </property>
+          </item>
          </widget>
         </item>
         <item>
@@ -107,8 +152,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>927</width>
-             <height>821</height>
+             <width>921</width>
+             <height>672</height>
             </rect>
            </property>
            <widget class="QLabel" name="view_data">
@@ -155,8 +200,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>927</width>
-             <height>821</height>
+             <width>920</width>
+             <height>672</height>
             </rect>
            </property>
            <widget class="QLabel" name="view_data2">
@@ -193,6 +238,9 @@
             <weight>75</weight>
             <bold>true</bold>
            </font>
+          </property>
+          <property name="currentIndex">
+           <number>2</number>
           </property>
           <item>
            <property name="text">
@@ -234,6 +282,38 @@
           </property>
          </spacer>
         </item>
+        <item>
+         <widget class="QComboBox" name="viewRoi2">
+          <property name="minimumSize">
+           <size>
+            <width>150</width>
+            <height>26</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <family>Arial</family>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <item>
+           <property name="text">
+            <string>Style1</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Style2</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Style3</string>
+           </property>
+          </item>
+         </widget>
+        </item>
        </layout>
       </item>
       <item>
@@ -241,6 +321,33 @@
         <property name="bottomMargin">
          <number>0</number>
         </property>
+        <item>
+         <widget class="QComboBox" name="bg_select">
+          <property name="minimumSize">
+           <size>
+            <width>150</width>
+            <height>40</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <family>Arial</family>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <item>
+           <property name="text">
+            <string>File background</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Camera2 background</string>
+           </property>
+          </item>
+         </widget>
+        </item>
         <item>
          <widget class="QPushButton" name="browser_button">
           <property name="minimumSize">
@@ -380,6 +487,12 @@
     </item>
     <item>
      <widget class="QLabel" name="label">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>150</height>
+       </size>
+      </property>
       <property name="text">
        <string/>
       </property>
