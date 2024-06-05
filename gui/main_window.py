@@ -53,12 +53,19 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.browser_button.clicked.connect(self.replace_background)
         self.bg_select.currentIndexChanged.connect(self.change_BG)
 
+
         """
         Record-related functions
         """
         self.ProcessCam.record_flag = False
         self.record_start.clicked.connect(self.set_record_flag_start)
         self.record_stop.clicked.connect(self.set_record_flag_stop)
+        
+        """
+        Model-select functions
+        """
+        self.model_select.currentIndexChanged.connect(lambda index: self.ProcessCam.change_model(self.model_select.currentText()))
+
 
     def change_BG(self):
         if self.bg_select.currentIndex() == 0:
@@ -70,6 +77,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             if self.ProcessCam.cam2.isOpened():
                 self.ProcessCam.background_cap = self.ProcessCam.cam2
                 
+
+
     def getRaw(self, data):  # data 為接收到的影像
         """ 取得影像 """
         self.showData(data)  # 將影像傳入至 showData()
