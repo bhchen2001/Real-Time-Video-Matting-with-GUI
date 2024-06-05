@@ -149,8 +149,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             G = np.clip(G, 0, 255)
             R = np.clip(R, 0, 255)
 
-            dst = np.stack((R, G, B), axis=-1).astype(np.uint8)
-            img = dst
+            img = np.stack((R, G, B), axis=-1).astype(np.uint8)
 
         elif self.viewRoi2.currentIndex() == 2:
             gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
@@ -162,6 +161,53 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             ret, result = cv2.threshold(canny, 100, 255, cv2.THRESH_BINARY_INV)
             img = cv2.cvtColor(result, cv2.COLOR_GRAY2RGB)
             # img = result
+        elif self.viewRoi2.currentIndex() == 3:
+            # 转换为灰度图
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            
+            # 使用双边滤波进行边缘保留平滑
+            smooth = cv2.bilateralFilter(img, 9, 300, 300)
+            
+            # 检测边缘
+            edges = cv2.Canny(gray, 30, 100)
+            
+            # 使用bitwise_and操作将边缘与平滑图像相结合
+            cartoon = cv2.bitwise_and(smooth, smooth, mask=edges)
+            
+            # 调整颜色饱和度，增强卡通效果
+            cartoon = cv2.cvtColor(cartoon, cv2.COLOR_BGR2HSV)
+            cartoon[:, :, 1] = np.clip(cartoon[:, :, 1] * 1.5, 0, 255)
+            img = cv2.cvtColor(cartoon, cv2.COLOR_HSV2BGR)
+
+        elif self.viewRoi2.currentIndex() == 4:
+            # 使用高斯模糊平滑图像
+            scale_percent = 75 # 缩小到原来尺寸的50%
+            width = int(img.shape[1] * scale_percent / 100)
+            height = int(img.shape[0] * scale_percent / 100)
+            dim = (width, height)
+            small_image = cv2.resize(img, dim, interpolation=cv2.INTER_LINEAR)
+            image_blur = cv2.GaussianBlur(small_image, (15, 15), 0)  # 减小滤波器大小
+
+            # 使用双边滤波进一步平滑图像并保留边缘
+            image_smooth = cv2.bilateralFilter(image_blur, d=5, sigmaColor=75, sigmaSpace=75)  # 减小参数
+
+            # 使用自适应阈值进行边缘检测
+            gray = cv2.cvtColor(small_image, cv2.COLOR_BGR2GRAY)
+            edges = cv2.adaptiveThreshold(cv2.medianBlur(gray, 5), 255,  # 减小滤波器大小
+                                        cv2.ADAPTIVE_THRESH_MEAN_C, 
+                                        cv2.THRESH_BINARY, 9, 2)  # 减小块大小
+            # 转换边缘图像为彩色
+            edges_colored = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
+            
+            # 叠加平滑图像和边缘图像
+            watercolor = cv2.bitwise_and(image_smooth, edges_colored)
+            
+            # 调整颜色饱和度，增强水彩效果
+            watercolor = cv2.cvtColor(watercolor, cv2.COLOR_BGR2HSV)
+            watercolor[:, :, 1] = np.clip(watercolor[:, :, 1] * 1.5, 0, 255)
+            watercolor = cv2.resize(watercolor, (img.shape[1], img.shape[0]), interpolation=cv2.INTER_LINEAR)
+            img= cv2.cvtColor(watercolor, cv2.COLOR_HSV2BGR)
+
 
         self.Ny, self.Nx, _ = img.shape  # 取得影像尺寸
         img_data = img.tobytes()
