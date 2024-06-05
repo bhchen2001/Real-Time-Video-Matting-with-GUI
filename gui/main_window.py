@@ -51,6 +51,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.cam_stop.clicked.connect(self.stopCam)  # 槽功能：暫停讀取影像
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.browser_button.clicked.connect(self.replace_background)
+        self.bg_select.currentIndexChanged.connect(self.change_BG)
+
 
         """
         Record-related functions
@@ -58,11 +60,24 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.ProcessCam.record_flag = False
         self.record_start.clicked.connect(self.set_record_flag_start)
         self.record_stop.clicked.connect(self.set_record_flag_stop)
-
+        
         """
         Model-select functions
         """
         self.model_select.currentIndexChanged.connect(lambda index: self.ProcessCam.change_model(self.model_select.currentText()))
+
+
+    def change_BG(self):
+        if self.bg_select.currentIndex() == 0:
+            self.browser_button.setEnabled(True)
+        elif self.bg_select.currentIndex() == 1:
+            self.browser_button.setEnabled(False)
+            self.browser_path.setText("The other Camera")
+            self.ProcessCam.background_img = None
+            if self.ProcessCam.cam2.isOpened():
+                self.ProcessCam.background_cap = self.ProcessCam.cam2
+                
+
 
     def getRaw(self, data):  # data 為接收到的影像
         """ 取得影像 """
