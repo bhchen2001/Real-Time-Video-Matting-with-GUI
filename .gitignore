@@ -5,6 +5,9 @@ __pycache__/
 content/video/*.mp4
 content/video/*.mov
 content/video/*.avi
+output/*.mp4
+output/*.mov
+output/*.avi
 
 # iamge file
 content/image/*.jpg
