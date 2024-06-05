@@ -4,8 +4,10 @@ import time
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from main_window_ui.video_mating_window import Ui_MainWindow
+from main_window_ui.video_matting_window import Ui_MainWindow
 from camera import Camera
+import numpy as np
+import math
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self):
@@ -43,12 +45,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # 攝影機的其他功能狀態：OFF
         self.cam_stop.setEnabled(False)
         self.viewRoi.setEnabled(False)
-
+        self.viewRoi2.setEnabled(False)
         # 連接按鍵
         self.cam_start.clicked.connect(self.openCam)  # 槽功能：開啟攝影機
         self.cam_stop.clicked.connect(self.stopCam)  # 槽功能：暫停讀取影像
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        self.browser_button.clicked.connect(self.replace_background)
+        if self.bg_select.currentIdx() == 0:
+            self.browser_button.clicked.connect(self.replace_background)
 
         """
         Record-related functions
@@ -74,7 +77,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.cam_start.setEnabled(False)
             self.cam_stop.setEnabled(True)
             self.viewRoi.setEnabled(True)
-
+            self.viewRoi2.setEnabled(True)
     def stopCam(self):
         """ 凍結攝影機的影像 """
         if self.ProcessCam.connect:  # 判斷攝影機是否可用
@@ -83,7 +86,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.cam_start.setEnabled(True)
             self.cam_stop.setEnabled(False)
             self.viewRoi.setEnabled(False)
-
+            self.viewRoi2.setEnabled(False)
     def showData(self, img):
         """ 顯示攝影機的影像 """
         self.Ny, self.Nx, _ = img.shape  # 取得影像尺寸
@@ -107,12 +110,39 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.scrollAreaWidgetContents.setMaximumSize(int(self.Nx*roi_rate), int(self.Ny*roi_rate))
         self.view_data.setMinimumSize(int(self.Nx*roi_rate), int(self.Ny*roi_rate))
         self.view_data.setMaximumSize(int(self.Nx*roi_rate), int(self.Ny*roi_rate))
+        
 
     def showData2(self, img):
         """ 顯示攝影機的影像 """
-        self.Ny, self.Nx, _ = img.shape  # 取得影像尺寸
-
         # 建立 Qimage 物件 (RGB格式)
+        if self.viewRoi2.currentIndex() == 0:
+            img = img
+        elif self.viewRoi2.currentIndex() == 1:
+            # 图像怀旧特效 (矢量化操作)
+            B = 0.272 * img[:, :, 2] + 0.534 * img[:, :, 1] + 0.131 * img[:, :, 0]
+            G = 0.349 * img[:, :, 2] + 0.686 * img[:, :, 1] + 0.168 * img[:, :, 0]
+            R = 0.393 * img[:, :, 2] + 0.769 * img[:, :, 1] + 0.189 * img[:, :, 0]
+
+            # 限制值的范围在0-255之间
+            B = np.clip(B, 0, 255)
+            G = np.clip(G, 0, 255)
+            R = np.clip(R, 0, 255)
+
+            dst = np.stack((R, G, B), axis=-1).astype(np.uint8)
+            img = dst
+
+        elif self.viewRoi2.currentIndex() == 2:
+            gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+            #高斯滤波降噪
+            gaussian = cv2.GaussianBlur(gray, (5,5), 0)
+            #Canny算子
+            canny = cv2.Canny(gaussian, 25, 100)
+            #阈值化处理
+            ret, result = cv2.threshold(canny, 100, 255, cv2.THRESH_BINARY_INV)
+            img = cv2.cvtColor(result, cv2.COLOR_GRAY2RGB)
+            # img = result
+
+        self.Ny, self.Nx, _ = img.shape  # 取得影像尺寸
         img_data = img.tobytes()
         qimg = QtGui.QImage(img_data, self.Nx, self.Ny, QtGui.QImage.Format_RGB888)
 
@@ -131,6 +161,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.scrollAreaWidgetContents_3.setMaximumSize(int(self.Nx*roi_rate), int(self.Ny*roi_rate))
         self.view_data2.setMinimumSize(int(self.Nx*roi_rate), int(self.Ny*roi_rate))
         self.view_data2.setMaximumSize(int(self.Nx*roi_rate), int(self.Ny*roi_rate))
+
+        
 
     def eventFilter(self, source, event):
         """ 事件過濾 (找到對應物件並定義滑鼠動作) """
@@ -204,7 +236,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             if self.ProcessCam.background_img is None:
                 raise IOError("Cannot open background image")
             self.ProcessCam.background_img = cv2.cvtColor(self.ProcessCam.background_img, cv2.COLOR_BGR2RGB)
-            self.ProcessCam.background_img = cv2.resize(self.ProcessCam.background_img, (1920,1080))
+            self.ProcessCam.background_img = cv2.resize(self.ProcessCam.background_img, (self.ProcessCam.frame_width,self.ProcessCam.frame_height))
             self.ProcessCam.background_cap = None
         else:
             self.ProcessCam.background_img = None
@@ -218,7 +250,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         """
         if not self.ProcessCam.record_flag:
             self.ProcessCam.record_flag = True
-            self.ProcessCam.video_writter = cv2.VideoWriter('../output/output.avi', cv2.VideoWriter_fourcc(*'mp4v'), 20, (1920, 1080))
+            self.ProcessCam.video_writter = cv2.VideoWriter('../output/output.avi', cv2.VideoWriter_fourcc(*'mp4v'), 20, (self.ProcessCam.frame_width,self.ProcessCam.frame_height))
 
     def set_record_flag_stop(self):
         """
