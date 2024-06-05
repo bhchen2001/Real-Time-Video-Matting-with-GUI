@@ -55,6 +55,14 @@ class Camera(QtCore.QThread):
             "resnet50": "rvm_resnet50.pth",
         }
 
+        """
+        input type
+            - 0: webcam
+            - 1: video
+        """
+        self.input_type = 0
+        self.video_input = None
+
         if os.path.isfile(background_source):
             if background_source.lower().endswith(('.mp4', '.avi', '.mov')):
                 self.background_cap = cv2.VideoCapture(background_source)
@@ -92,43 +100,81 @@ class Camera(QtCore.QThread):
 
         try:
             with torch.no_grad():
-                rec = [None] * 4
-                downsample_ratio = 0.25
-                while self.running and self.connect:
-                    ret, frame = self.cam.read()
-                    if not ret:
-                        break
-                    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                    self.ori_data.emit(frame)
-                    frame = transform(frame).unsqueeze(0).to(device, dtype)
+                    rec = [None] * 4
+                    downsample_ratio = 0.25
+                    while self.running and self.connect:
+                        if self.input_type == 0:
+                            ret, frame = self.cam.read()
+                            if not ret:
+                                break
+                            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                            self.ori_data.emit(frame)
+                            frame = transform(frame).unsqueeze(0).to(device, dtype)
 
-                    fgr, pha, *rec = model(frame.cuda(), *rec, downsample_ratio)
+                            fgr, pha, *rec = model(frame.cuda(), *rec, downsample_ratio)
 
-                    if self.background_img is not None:
-                        background_tensor = torch.tensor(self.background_img, dtype=torch.float32).permute(2, 0, 1).unsqueeze(0).div(255).to(device)
-                    elif self.background_cap is not None:
-                        ret, bg_frame = self.background_cap.read()
-                        if not ret:
-                            self.background_cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
-                            ret, bg_frame = self.background_cap.read()
-                        bg_frame = cv2.cvtColor(bg_frame, cv2.COLOR_BGR2RGB)
-                        bg_frame = cv2.resize(bg_frame, (self.frame_width, self.frame_height))
-                        background_tensor = torch.tensor(bg_frame, dtype=torch.float32).permute(2, 0, 1).unsqueeze(0).div(255).to(device)
+                            if self.background_img is not None:
+                                background_tensor = torch.tensor(self.background_img, dtype=torch.float32).permute(2, 0, 1).unsqueeze(0).div(255).to(device)
+                            elif self.background_cap is not None:
+                                ret, bg_frame = self.background_cap.read()
+                                if not ret:
+                                    self.background_cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                                    ret, bg_frame = self.background_cap.read()
+                                bg_frame = cv2.cvtColor(bg_frame, cv2.COLOR_BGR2RGB)
+                                bg_frame = cv2.resize(bg_frame, (self.frame_width, self.frame_height))
+                                background_tensor = torch.tensor(bg_frame, dtype=torch.float32).permute(2, 0, 1).unsqueeze(0).div(255).to(device)
 
-                    if self.record_flag:
-                        """
-                        record frontground video
-                        """
-                        green_background = torch.tensor([0, 1, 0], dtype=torch.float32).view(1, 3, 1, 1).to(device)
-                        com_green = fgr * pha + green_background * (1 - pha)
-                        com_green = com_green.squeeze().permute(1, 2, 0).cpu().numpy()
-                        com_green = cv2.cvtColor(com_green, cv2.COLOR_RGB2BGR)
-                        self.video_writter.write((com_green * 255).astype('uint8'))
+                            if self.record_flag:
+                                """
+                                record frontground video
+                                """
+                                green_background = torch.tensor([0, 1, 0], dtype=torch.float32).view(1, 3, 1, 1).to(device)
+                                com_green = fgr * pha + green_background * (1 - pha)
+                                com_green = com_green.squeeze().permute(1, 2, 0).cpu().numpy()
+                                com_green = cv2.cvtColor(com_green, cv2.COLOR_RGB2BGR)
+                                self.video_writter.write((com_green * 255).astype('uint8'))
 
-                    com = fgr * pha + background_tensor * (1 - pha)
-                    com = com.squeeze().permute(1, 2, 0).cpu().numpy()
-                    com = (com * 255).astype('uint8')
-                    self.matting_data.emit(com)
+                            com = fgr * pha + background_tensor * (1 - pha)
+                            com = com.squeeze().permute(1, 2, 0).cpu().numpy()
+                            com = (com * 255).astype('uint8')
+                            self.matting_data.emit(com)
+                        elif self.input_type == 1 and self.video_input is not None:
+                            ret, frame = self.video_input.read()
+                            if not ret:
+                                self.video_input.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                                ret, frame = self.video_input.read()
+                            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                            frame = cv2.resize(frame, (self.frame_width, self.frame_height))
+                            self.ori_data.emit(frame)
+                            frame = transform(frame).unsqueeze(0).to(device, dtype)
+
+                            fgr, pha, *rec = model(frame.cuda(), *rec, downsample_ratio)
+
+                            if self.background_img is not None:
+                                background_tensor = torch.tensor(self.background_img, dtype=torch.float32).permute(2, 0, 1).unsqueeze(0).div(255).to(device)
+                            elif self.background_cap is not None:
+                                ret, bg_frame = self.background_cap.read()
+                                if not ret:
+                                    self.background_cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                                    ret, bg_frame = self.background_cap.read()
+                                bg_frame = cv2.cvtColor(bg_frame, cv2.COLOR_BGR2RGB)
+                                bg_frame = cv2.resize(bg_frame, (self.frame_width, self.frame_height))
+                                background_tensor = torch.tensor(bg_frame, dtype=torch.float32).permute(2, 0, 1).unsqueeze(0).div(255).to(device)
+
+                            if self.record_flag:
+                                """
+                                record frontground video
+                                """
+                                green_background = torch.tensor([0, 1, 0], dtype=torch.float32).view(1, 3, 1, 1).to(device)
+                                com_green = fgr * pha + green_background * (1 - pha)
+                                com_green = com_green.squeeze().permute(1, 2, 0).cpu().numpy()
+                                com_green = cv2.cvtColor(com_green, cv2.COLOR_RGB2BGR)
+                                self.video_writter.write((com_green * 255).astype('uint8'))
+
+                            com = fgr * pha + background_tensor * (1 - pha)
+                            com = com.squeeze().permute(1, 2, 0).cpu().numpy()
+                            com = (com * 255).astype('uint8')
+                            self.matting_data.emit(com)
 
         finally:
             pass
