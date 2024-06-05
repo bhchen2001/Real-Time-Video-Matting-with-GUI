@@ -25,6 +25,8 @@ class Camera(QtCore.QThread):
         self.device = device
 
         self.cam = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        self.frame_width = int(self.cam.get(cv2.CAP_PROP_FRAME_WIDTH))
+        self.frame_height = int(self.cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
         if self.cam is None or not self.cam.isOpened():
             self.connect = False
             self.running = False
@@ -52,8 +54,8 @@ class Camera(QtCore.QThread):
                 if self.background_img is None:
                     raise IOError("Cannot open background image")
                 self.background_img = cv2.cvtColor(self.background_img, cv2.COLOR_BGR2RGB)
-                self.background_img = cv2.resize(self.background_img, (1920,1080))
-                background_tensor = torch.tensor(self.background_img, dtype=torch.float32).permute(2, 0, 1).unsqueeze(0).div(255).to(device)
+                self.background_img = cv2.resize(self.background_img, (self.frame_width,self.frame_height))
+                # background_tensor = torch.tensor(self.background_img, dtype=torch.float32).permute(2, 0, 1).unsqueeze(0).div(255).to(device)
         else:
             raise ValueError("Invalid background source")
 
@@ -66,8 +68,8 @@ class Camera(QtCore.QThread):
         transform = transforms.ToTensor()
 
         # Initialize reader
-        self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-        self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+        # self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, self.frame_width)
+        # self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, self.frame_height)
         if not self.cam.isOpened():
             raise IOError("Cannot open webcam")
 
@@ -99,7 +101,7 @@ class Camera(QtCore.QThread):
                             self.background_cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
                             ret, bg_frame = self.background_cap.read()
                         bg_frame = cv2.cvtColor(bg_frame, cv2.COLOR_BGR2RGB)
-                        bg_frame = cv2.resize(bg_frame, (1920, 1080))
+                        bg_frame = cv2.resize(bg_frame, (self.frame_width, self.frame_height))
                         background_tensor = torch.tensor(bg_frame, dtype=torch.float32).permute(2, 0, 1).unsqueeze(0).div(255).to(device)
 
                     if self.record_flag:
