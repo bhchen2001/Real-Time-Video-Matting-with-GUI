@@ -127,8 +127,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         elif self.viewRoi.currentIndex() == 3: roi_rate = 1.25
         elif self.viewRoi.currentIndex() == 4: roi_rate = 1.5
         else: pass
-        self.scrollAreaWidgetContents.setMinimumSize(int(self.Nx*roi_rate), int(self.Ny*roi_rate))
-        self.scrollAreaWidgetContents.setMaximumSize(int(self.Nx*roi_rate), int(self.Ny*roi_rate))
+        self.scrollAreaWidgetContents_3.setMinimumSize(int(self.Nx*roi_rate), int(self.Ny*roi_rate))
+        self.scrollAreaWidgetContents_3.setMaximumSize(int(self.Nx*roi_rate), int(self.Ny*roi_rate))
         self.view_data2.setMinimumSize(int(self.Nx*roi_rate), int(self.Ny*roi_rate))
         self.view_data2.setMaximumSize(int(self.Nx*roi_rate), int(self.Ny*roi_rate))
 
