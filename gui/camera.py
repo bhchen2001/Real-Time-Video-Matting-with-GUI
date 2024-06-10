@@ -62,6 +62,7 @@ class Camera(QtCore.QThread):
         """
         self.input_type = 0
         self.video_input = None
+        self.video_fps = 25
 
         if os.path.isfile(background_source):
             if background_source.lower().endswith(('.mp4', '.avi', '.mov')):
@@ -175,6 +176,8 @@ class Camera(QtCore.QThread):
                             com = com.squeeze().permute(1, 2, 0).cpu().numpy()
                             com = (com * 255).astype('uint8')
                             self.matting_data.emit(com)
+
+                            cv2.waitKey(int(1000//self.video_fps))
 
         finally:
             pass
